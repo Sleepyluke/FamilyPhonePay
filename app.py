@@ -1,12 +1,4 @@
-from functools import wraps
-from flask import (Flask, render_template, request, redirect,
-                   url_for, flash)
-import os
-from flask_migrate import Migrate
-from flask_login import (LoginManager, login_user, logout_user,
-                         login_required, current_user)
 
-from models import db, User
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'replace-with-a-secure-key'
@@ -17,6 +9,14 @@ db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///app.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
+db.init_app(app)
+migrate = Migrate(app, db)
 
 # Placeholder data for bill portions
 USER_BILLS = {

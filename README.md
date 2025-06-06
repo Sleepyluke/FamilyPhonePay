@@ -1,9 +1,5 @@
 # FamilyPhonePay
 
-This project is a simple Flask web application that allows users to register,
-log in, and view their portion of a bill. It uses **Flask-Login** for session
-management and **SQLAlchemy** for persistence. Manager accounts can create
-bills or invite new members.
 
 ## Setup
 
