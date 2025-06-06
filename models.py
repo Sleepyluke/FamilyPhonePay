@@ -1,18 +1,15 @@
-from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
+
 
 # SQLAlchemy instance used across the application
 # It will be initialized in app.py
 
 db = SQLAlchemy()
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
     family_id = db.Column(db.Integer, db.ForeignKey('family.id'))
 
     family = db.relationship('Family', back_populates='members')
     notifications = db.relationship('NotificationLog', back_populates='user')
+
 
 class Family(db.Model):
     id = db.Column(db.Integer, primary_key=True)

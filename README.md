@@ -1,9 +1,5 @@
 # FamilyPhonePay
 
-This project is a simple Flask web application that allows users to sign in and view
-their portion of a bill. It includes basic routes for signing in, viewing a dashboard,
-and displaying a profile page. The application now uses SQLAlchemy for persistence
-and includes instructions for running database migrations.
 
 ## Setup
 
@@ -40,8 +36,11 @@ The application will start on `http://localhost:5000/`.
 
 ## Pages
 
-- `/signin` – Sign in with a username.
+- `/login` – Log in with your username and password.
+- `/register` – Create a new account.
 - `/dashboard` – View your portion of the bill after signing in.
 - `/profile` – Simple profile page showing the current username.
+- `/create_bill` – Manager-only page for creating a bill.
+- `/invite` – Manager-only page for inviting members.
 
 This project uses in-memory placeholder data for demonstration purposes only.
