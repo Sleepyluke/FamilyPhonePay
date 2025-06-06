@@ -2,13 +2,14 @@ import os
 import json
 import pytest
 from werkzeug.security import generate_password_hash
+from itsdangerous import URLSafeTimedSerializer
 
 # set database to in-memory before importing app
 os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 
 import app
 from app import app as flask_app
-from models import db, User, Family, Bill, BillItem, NotificationLog
+from models import db, User, Family, Bill, BillItem, NotificationLog, Invitation
 
 
 @pytest.fixture
@@ -83,3 +84,47 @@ def test_publish_bill_sends_emails(client, monkeypatch):
     with flask_app.app_context():
         log = NotificationLog.query.filter_by(user_id=member.id).first()
         assert log is not None
+
+
+def test_create_invitation(client, monkeypatch):
+    sent = []
+
+    def fake_send(to_email, subject, body):
+        sent.append((to_email, subject, body))
+
+    monkeypatch.setattr('api.send_email', fake_send)
+
+    with flask_app.app_context():
+        family = Family.query.first()
+        fam_id = family.id
+
+    login(client)
+    rv = client.post('/api/invite', json={'email': 'new@example.com', 'family_id': fam_id})
+    assert rv.status_code == 201
+    assert len(sent) == 1
+    assert sent[0][0] == 'new@example.com'
+
+    with flask_app.app_context():
+        inv = Invitation.query.filter_by(email='new@example.com').first()
+        assert inv is not None
+
+
+def test_accept_invitation(client):
+    with flask_app.app_context():
+        family = Family.query.first()
+        serializer = URLSafeTimedSerializer(flask_app.secret_key)
+        token = serializer.dumps('bob@example.com')
+        inv = Invitation(family_id=family.id, email='bob@example.com', token=token)
+        db.session.add(inv)
+        db.session.commit()
+
+    rv = client.post(f'/invite/{token}', data={'username': 'bob', 'password': 'pw'}, follow_redirects=True)
+    assert rv.status_code == 200
+    assert b'Welcome, bob!' in rv.data
+
+    with flask_app.app_context():
+        user = User.query.filter_by(username='bob').first()
+        inv = Invitation.query.filter_by(token=token).first()
+        assert user is not None
+        assert user.email == 'bob@example.com'
+        assert inv.accepted_at is not None

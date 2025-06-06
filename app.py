@@ -9,7 +9,7 @@ from flask_login import (
     current_user,
 )
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User
+from models import db, User, Invitation
 from api import api_bp
 
 app = Flask(__name__)
@@ -68,6 +68,33 @@ def register():
             login_user(user)
             return redirect(url_for('dashboard'))
     return render_template('register.html', error=error)
+
+
+@app.route('/invite/<token>', methods=['GET', 'POST'])
+def accept_invite(token):
+    invite = Invitation.query.filter_by(token=token).first_or_404()
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if not username or not password:
+            error = 'Username and password are required.'
+        elif User.query.filter_by(username=username).first():
+            error = 'Username already taken.'
+        else:
+            user = User(
+                username=username,
+                password_hash=generate_password_hash(password),
+                email=invite.email,
+                role='user',
+                family_id=invite.family_id,
+            )
+            db.session.add(user)
+            invite.accepted_at = datetime.utcnow()
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for('dashboard'))
+    return render_template('accept_invite.html', error=error, email=invite.email)
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
