@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Edit Bill Items</title>
+</head>
+<body>
+    <h1>Edit Bill Items</h1>
+    <form method="post">
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username" required><br>
+        <label for="surcharge">Surcharge:</label>
+        <input type="number" step="0.01" name="surcharge" id="surcharge" required><br>
+        <button type="submit">Save</button>
+    </form>
+    <h2>Current Items</h2>
+    <ul>
+    {% for user, surcharge in items.items() %}
+        <li>{{ user }}: {{ surcharge }}</li>
+    {% else %}
+        <li>No items</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

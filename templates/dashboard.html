@@ -7,7 +7,21 @@
 <body>
     <h1>Dashboard</h1>
     <p>Welcome, {{ username }}!</p>
-    <p>Your portion of the bill is: <strong>${{ '%.2f'|format(bill) }}</strong></p>
+    {% if cycle_month %}
+    <p>Bill for {{ cycle_month }}</p>
+    <table border="1" cellpadding="5">
+        <tr><th>User</th><th>Share</th></tr>
+        {% for user, share in shares.items() %}
+        <tr{% if user == username.lower() %} style="font-weight:bold;"{% endif %}>
+            <td>{{ user }}</td>
+            <td>${{ '%.2f'|format(share) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No bill data available.</p>
+    {% endif %}
     <p><a href="{{ url_for('profile') }}">Profile</a> | <a href="{{ url_for('signout') }}">Sign Out</a></p>
+    <p><a href="{{ url_for('create_bill') }}">Create Bill</a></p>
 </body>
 </html>
