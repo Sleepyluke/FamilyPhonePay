@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
 
 app = Flask(__name__)
-app.secret_key = 'replace-with-a-secure-key'
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///app.db')
