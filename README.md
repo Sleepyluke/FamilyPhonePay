@@ -2,7 +2,8 @@
 
 This project is a simple Flask web application that allows users to sign in and view
 their portion of a bill. It includes basic routes for signing in, viewing a dashboard,
-and displaying a profile page.
+and displaying a profile page. The application now uses SQLAlchemy for persistence
+and includes instructions for running database migrations.
 
 ## Setup
 
@@ -13,7 +14,23 @@ and displaying a profile page.
 pip install -r requirements.txt
 ```
 
-3. Run the application:
+3. Set the `DATABASE_URL` environment variable if you do not want to use the
+   default SQLite database. Example for PostgreSQL:
+
+```bash
+export DATABASE_URL=postgresql://user:password@localhost/dbname
+```
+
+4. Run database migrations (only required after the first setup or when models
+   change):
+
+```bash
+flask db init        # only once
+flask db migrate -m "Initial tables"
+flask db upgrade
+```
+
+5. Run the application:
 
 ```bash
 python app.py
