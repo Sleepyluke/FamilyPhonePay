@@ -2,7 +2,9 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, abort
 from flask_login import login_required, current_user
 
-from models import db, Family, Bill, BillItem, NotificationLog
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
+from models import db, Family, Bill, BillItem, NotificationLog, Invitation
 from mailer import send_email
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -25,6 +27,32 @@ def create_family():
     db.session.add(family)
     db.session.commit()
     return jsonify({'id': family.id, 'name': family.name}), 201
+
+
+@api_bp.route('/invite', methods=['POST'])
+@login_required
+def create_invite():
+    manager_required()
+    data = request.get_json() or {}
+    email = data.get('email')
+    family_id = data.get('family_id')
+    if not email or not family_id:
+        return jsonify({'error': 'email and family_id required'}), 400
+
+    serializer = URLSafeTimedSerializer(current_app.secret_key)
+    token = serializer.dumps(email)
+    invite = Invitation(family_id=family_id, email=email, token=token)
+    db.session.add(invite)
+    db.session.commit()
+
+    link = f"{request.url_root.rstrip('/')}/invite/{token}"
+    subject = 'You are invited'
+    body = f'Please join by visiting {link}'
+    try:
+        send_email(email, subject, body)
+    except Exception:
+        pass
+    return jsonify({'id': invite.id}), 201
 
 
 @api_bp.route('/bills', methods=['POST'])

@@ -29,6 +29,7 @@ class Family(db.Model):
 
     members = db.relationship('User', back_populates='family')
     bills = db.relationship('Bill', back_populates='family')
+    invitations = db.relationship('Invitation', back_populates='family')
 
 class Bill(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,3 +66,14 @@ class NotificationLog(db.Model):
 
     user = db.relationship('User', back_populates='notifications')
     bill = db.relationship('Bill', back_populates='notifications')
+
+
+class Invitation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    family_id = db.Column(db.Integer, db.ForeignKey('family.id'), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    token = db.Column(db.String(255), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    accepted_at = db.Column(db.DateTime)
+
+    family = db.relationship('Family', back_populates='invitations')
