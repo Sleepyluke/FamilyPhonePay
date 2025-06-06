@@ -1,8 +1,7 @@
 # FamilyPhonePay
 
 This project is a simple Flask web application that allows users to sign in and view
-their portion of a bill. It includes basic routes for signing in, viewing a dashboard,
-and displaying a profile page.
+bills. It now supports email notifications when bills are created or updated.
 
 ## Setup
 
@@ -13,7 +12,13 @@ and displaying a profile page.
 pip install -r requirements.txt
 ```
 
-3. Run the application:
+3. Set the following environment variables:
+
+- `SENDGRID_API_KEY` – API key for sending mail.
+- `EMAIL_FROM_ADDRESS` – Address used as the sender.
+- `DATABASE_URL` – Optional SQLAlchemy database URI (defaults to `sqlite:///data.db`).
+
+4. Run the application:
 
 ```bash
 python app.py
@@ -26,5 +31,6 @@ The application will start on `http://localhost:5000/`.
 - `/signin` – Sign in with a username.
 - `/dashboard` – View your portion of the bill after signing in.
 - `/profile` – Simple profile page showing the current username.
+- `/bill` – Create or update a bill (sends an email notification).
 
-This project uses in-memory placeholder data for demonstration purposes only.
+This project uses placeholder data for demonstration purposes only.
