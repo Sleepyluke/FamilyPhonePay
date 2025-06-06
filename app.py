@@ -1,5 +1,14 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    abort,
+    Response,
+    stream_with_context,
+)
 from flask_migrate import Migrate
 from flask_login import (
     LoginManager,
@@ -11,6 +20,7 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Invitation
 from api import api_bp
+from events import add_listener, remove_listener
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
@@ -114,6 +124,22 @@ def signin():
 def dashboard():
     bill = USER_BILLS.get(current_user.username.lower(), 0.0)
     return render_template('dashboard.html', bill=bill)
+
+
+@app.route('/events')
+@login_required
+def sse_events():
+    q = add_listener()
+
+    def stream(q):
+        try:
+            while True:
+                data = q.get()
+                yield f"data: {data}\n\n"
+        except GeneratorExit:
+            remove_listener(q)
+
+    return Response(stream_with_context(stream(q)), mimetype="text/event-stream")
 
 @app.route('/profile')
 @login_required

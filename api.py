@@ -1,11 +1,13 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, abort
+import json
 from flask_login import login_required, current_user
 
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
 from models import db, Family, Bill, BillItem, NotificationLog, Invitation
 from mailer import send_email
+from events import send_event
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -87,6 +89,8 @@ def publish_bill():
         db.session.add(log)
     db.session.commit()
 
+    send_event(json.dumps({'amount': float(bill.total_amount or 0)}))
+
     return jsonify({'id': bill.id}), 201
 
 
@@ -109,6 +113,8 @@ def add_surcharge(bill_id):
     )
     db.session.add(item)
     db.session.commit()
+
+    send_event(json.dumps({'amount': float(bill.total_amount or 0)}))
     return jsonify({'id': item.id}), 201
 
 
