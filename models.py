@@ -1,16 +1,18 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 # SQLAlchemy instance used across the application
 # It will be initialized in app.py
 
 db = SQLAlchemy()
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     name = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
+    password_hash = db.Column(db.String(255))
     role = db.Column(db.String(50))
     auth_sub = db.Column(db.String(100))
     family_id = db.Column(db.Integer, db.ForeignKey('family.id'))
