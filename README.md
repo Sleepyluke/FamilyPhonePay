@@ -24,18 +24,18 @@ echo "DATABASE_URL=postgresql://user:password@localhost/dbname" >> .env
 ```
 
 4. Run database migrations (only required after the first setup or when models
-   change):
+   change). Initialize the migration repository once with `flask db init`, then
+   use the provided make target to apply migrations:
 
 ```bash
 flask db init        # only once
-flask db migrate -m "Initial tables"
-flask db upgrade
+make migrate
 ```
 
-5. Run the application:
+5. Run the application using the make target:
 
 ```bash
-python app.py
+make dev
 ```
 
 The application will start on `http://localhost:5000/`.
