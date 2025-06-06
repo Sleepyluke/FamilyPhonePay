@@ -14,11 +14,13 @@ and includes instructions for running database migrations.
 pip install -r requirements.txt
 ```
 
-3. Set the `DATABASE_URL` environment variable if you do not want to use the
-   default SQLite database. Example for PostgreSQL:
+3. Copy `.env.example` to `.env` and adjust the values if needed. By default the
+   application uses `dev-secret` for `SECRET_KEY` and a SQLite database. To use
+   another database you can set `DATABASE_URL` in `.env`. Example for PostgreSQL:
 
 ```bash
-export DATABASE_URL=postgresql://user:password@localhost/dbname
+cp .env.example .env
+echo "DATABASE_URL=postgresql://user:password@localhost/dbname" >> .env
 ```
 
 4. Run database migrations (only required after the first setup or when models
