@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <p>Welcome, {{ username }}!</p>
+    <p>Your portion of the bill is: <strong>${{ '%.2f'|format(bill) }}</strong></p>
+    <p><a href="{{ url_for('profile') }}">Profile</a> | <a href="{{ url_for('signout') }}">Sign Out</a></p>
+</body>
+</html>
