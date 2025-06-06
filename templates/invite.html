@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Invite Member</title>
+</head>
+<body>
+    <h1>Invite Member</h1>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul>
+    {% for msg in messages %}<li style="color:green;">{{ msg }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    <form method="post">
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username" required><br>
+        <button type="submit">Invite</button>
+    </form>
+    <p><a href="{{ url_for('dashboard') }}">Back</a></p>
+</body>
+</html>
