@@ -28,3 +28,12 @@ The application will start on `http://localhost:5000/`.
 - `/profile` – Simple profile page showing the current username.
 
 This project uses in-memory placeholder data for demonstration purposes only.
+
+## Running Tests
+
+To run the automated test suite locally:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
