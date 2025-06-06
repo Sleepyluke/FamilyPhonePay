@@ -10,6 +10,7 @@ from flask_login import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
+from api import api_bp
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
@@ -23,6 +24,9 @@ db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'signin'
+
+
+app.register_blueprint(api_bp)
 
 
 @login_manager.user_loader
