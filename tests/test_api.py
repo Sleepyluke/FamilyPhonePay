@@ -8,7 +8,7 @@ os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 
 import app
 from app import app as flask_app
-from models import db, User, Family, Bill, BillItem
+from models import db, User, Family, Bill, BillItem, NotificationLog
 
 
 @pytest.fixture
@@ -52,3 +52,34 @@ def test_get_bill_detail(client):
     assert len(data['items']) == 1
     assert data['items'][0]['description'] == 'test item'
 
+
+
+def test_publish_bill_sends_emails(client, monkeypatch):
+    sent = []
+
+    def fake_send(to_email, subject, body):
+        sent.append((to_email, subject, body))
+
+    monkeypatch.setattr('api.send_email', fake_send)
+
+    with flask_app.app_context():
+        family = Family.query.first()
+        member = User(
+            username='alice',
+            password_hash=generate_password_hash('pw'),
+            email='alice@example.com',
+            family_id=family.id,
+        )
+        db.session.add(member)
+        db.session.commit()
+        fam_id = family.id
+
+    login(client)
+    rv = client.post('/api/bills', json={'family_id': fam_id})
+    assert rv.status_code == 201
+    assert len(sent) == 1
+    assert sent[0][0] == 'alice@example.com'
+
+    with flask_app.app_context():
+        log = NotificationLog.query.filter_by(user_id=member.id).first()
+        assert log is not None

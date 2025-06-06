@@ -2,7 +2,8 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, abort
 from flask_login import login_required, current_user
 
-from models import db, Family, Bill, BillItem
+from models import db, Family, Bill, BillItem, NotificationLog
+from mailer import send_email
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -44,6 +45,20 @@ def publish_bill():
     )
     db.session.add(bill)
     db.session.commit()
+    # notify family members
+    family = Family.query.get(family_id)
+    subject = 'New bill available'
+    body = f'Bill #{bill.id} has been published.'
+    for member in family.members:
+        if member.email:
+            try:
+                send_email(member.email, subject, body)
+            except Exception:
+                pass
+        log = NotificationLog(user_id=member.id, bill_id=bill.id, message=subject)
+        db.session.add(log)
+    db.session.commit()
+
     return jsonify({'id': bill.id}), 201
 
 
