@@ -7,7 +7,18 @@
 <body>
     <h1>Dashboard</h1>
     <p>Welcome, {{ current_user.username }}!</p>
-    <p>Your portion of the bill is: <strong>${{ '%.2f'|format(bill) }}</strong></p>
+    <p>Your portion of the bill is: <strong id="bill-amount">${{ '%.2f'|format(bill) }}</strong></p>
     <p><a href="{{ url_for('profile') }}">Profile</a> | <a href="{{ url_for('signout') }}">Sign Out</a></p>
+    <script>
+    const evt = new EventSource("{{ url_for('sse_events') }}");
+    evt.onmessage = function(e) {
+        try {
+            const data = JSON.parse(e.data);
+            if (data.amount !== undefined) {
+                document.getElementById('bill-amount').textContent = '$' + Number(data.amount).toFixed(2);
+            }
+        } catch(err) {}
+    };
+    </script>
 </body>
 </html>

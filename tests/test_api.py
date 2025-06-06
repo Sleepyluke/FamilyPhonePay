@@ -128,3 +128,11 @@ def test_accept_invitation(client):
         assert user is not None
         assert user.email == 'bob@example.com'
         assert inv.accepted_at is not None
+
+
+def test_events_stream(client):
+    login(client)
+    rv = client.get('/events', buffered=False)
+    assert rv.status_code == 200
+    assert rv.mimetype == 'text/event-stream'
+    assert rv.is_streamed
