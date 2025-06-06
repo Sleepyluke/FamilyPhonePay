@@ -1,7 +1,18 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session
+from flask_migrate import Migrate
+from models import db
 
 app = Flask(__name__)
 app.secret_key = 'replace-with-a-secure-key'
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///app.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
+db.init_app(app)
+migrate = Migrate(app, db)
 
 # Placeholder data for bill portions
 USER_BILLS = {
