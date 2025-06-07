@@ -53,9 +53,21 @@ class BillItem(db.Model):
     description = db.Column(db.String(200))
     amount = db.Column(db.Numeric(10, 2))
     is_recurring = db.Column(db.Boolean, default=False)
+    paid_at = db.Column(db.DateTime)
 
     bill = db.relationship('Bill', back_populates='items')
     user = db.relationship('User', back_populates='bill_items')
+    payments = db.relationship('Payment', back_populates='bill_item')
+
+class Payment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bill_item_id = db.Column(db.Integer, db.ForeignKey('bill_item.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    amount = db.Column(db.Numeric(10, 2))
+    paid_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    bill_item = db.relationship('BillItem', back_populates='payments')
+    user = db.relationship('User')
 
 class NotificationLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)

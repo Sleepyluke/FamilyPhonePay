@@ -5,7 +5,8 @@ from flask_login import login_required, current_user
 
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
-from models import db, Family, Bill, BillItem, NotificationLog, Invitation
+from sqlalchemy import func
+from models import db, Family, Bill, BillItem, NotificationLog, Invitation, Payment
 from mailer import send_email
 from events import send_event
 
@@ -140,4 +141,22 @@ def bill_info(bill_id):
             'items': items,
         }
     )
+
+
+@api_bp.route('/items/<int:item_id>/payments', methods=['POST'])
+@login_required
+def record_payment(item_id):
+    item = BillItem.query.get_or_404(item_id)
+    data = request.get_json() or {}
+    amount = data.get('amount')
+    if amount is None:
+        return jsonify({'error': 'amount required'}), 400
+    payment = Payment(bill_item_id=item.id, user_id=current_user.id, amount=amount, paid_at=datetime.utcnow())
+    db.session.add(payment)
+    db.session.flush()
+    total = db.session.query(func.coalesce(func.sum(Payment.amount), 0)).filter_by(bill_item_id=item.id).scalar()
+    if item.amount is not None and total >= float(item.amount) and item.paid_at is None:
+        item.paid_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'id': payment.id}), 201
 

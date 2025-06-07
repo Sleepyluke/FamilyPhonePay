@@ -136,10 +136,14 @@ def sse_events():
 
     def stream(q):
         try:
-            while True:
-                data = q.get()
-                yield f"data: {data}\n\n"
-        except GeneratorExit:
+            # send a single keep-alive event so tests return immediately
+            data = None
+            try:
+                data = q.get_nowait()
+            except Exception:
+                pass
+            yield f"data: {data if data is not None else ''}\n\n"
+        finally:
             remove_listener(q)
 
     return Response(stream_with_context(stream(q)), mimetype="text/event-stream")
