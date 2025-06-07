@@ -9,7 +9,7 @@ from flask import (
     Response,
     stream_with_context,
 )
-from flask_migrate import Migrate
+from flask_migrate import Migrate, upgrade
 from flask_login import (
     LoginManager,
     login_user,
@@ -159,6 +159,11 @@ def manage():
 def signout():
     logout_user()
     return redirect(url_for('signin'))
+
+@app.route('/run-migrations')
+def run_migrations():
+    upgrade()
+    return "Migrations applied!"
 
 if __name__ == '__main__':
     app.run(debug=True)
