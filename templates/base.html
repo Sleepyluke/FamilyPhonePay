@@ -13,7 +13,9 @@
             <ul class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('add_item') }}">Add Item</a></li>
+                    {% if current_user.family_id %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('add_item') }}">Add Item</a></li>
+                    {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('signout') }}">Sign Out</a></li>
                 {% else %}

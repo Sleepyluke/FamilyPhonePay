@@ -154,7 +154,7 @@ def profile():
 @login_required
 def add_item():
     if not current_user.family_id:
-        abort(400)
+        abort(403)
     family = Family.query.get(current_user.family_id)
     members = family.members
     error = None
