@@ -40,21 +40,62 @@ make dev
 
 The application will start on `http://localhost:5000/`.
 
-## Deploying to Render
+## 🚀 Deploying to Render
 
-1. Ensure the following environment variables are set in your Render service:
-   `SECRET_KEY`, `DATABASE_URL`, `SENDGRID_API_KEY`, and `EMAIL_FROM`. You can
-   use `.env.example` as a reference.
-2. Add a Postgres database in Render and set `DATABASE_URL` accordingly.
-3. Render will use the `Procfile` to start the app. The included command runs
-   database migrations and then starts Gunicorn:
+Follow these steps to deploy on [Render](https://render.com):
+
+1. **Setup a PostgreSQL Database**  
+   Create a Postgres instance in Render and note the `DATABASE_URL`.
+
+2. **Create an Environment Group**  
+   Add the following variables to a new Environment Group and link it to your service:
+
+   | Key | Value (example) |
+   | --- | --------------- |
+   | `SECRET_KEY` | a long random string |
+   | `DATABASE_URL` | Render-provided Postgres URL |
+   | `SENDGRID_API_KEY` | from your SendGrid dashboard |
+   | `EMAIL_FROM` | a verified SendGrid sender email |
+
+3. **Add a Temporary Migration Route**  
+   Render doesn't provide shell access before the first deploy. Temporarily add this route to `app.py`:
+
+   ```python
+   @app.route('/run-migrations')
+   def run_migrations():
+       from flask_migrate import upgrade
+       try:
+           upgrade()
+           return "✅ Migrations applied"
+       except Exception as e:
+           return f"❌ Migration failed: {e}", 500
+   ```
+
+   Deploy, then visit `/run-migrations` once to apply the migrations. Remove the route afterward.
+
+4. **Switch to a Production Mailer**  
+   Update `mailer.py` to use your SendGrid settings:
+
+   ```diff
+   -        sg = SendGridAPIClient()
+   -        from_email = FROM_EMAIL or 'noreply@example.com'
+   -        message = Mail(from_email=from_email, to_emails=[recipient], subject=subject, html_content=html)
+   -        sg.send(message)
+   +        sg = SendGridAPIClient(SENDGRID_API_KEY)
+   +        from_email = EMAIL_FROM
+   +        message = Mail(from_email=from_email, to_emails=[recipient], subject=subject, html_content=html)
+   +        sg.send(message)
+   ```
+
+   Ensure `SENDGRID_API_KEY` and `EMAIL_FROM` are set in Render.
+
+5. Render will use the `Procfile` to start the app. The included command runs migrations and then launches Gunicorn:
 
    ```bash
    web: bash -c "flask db upgrade && gunicorn -b 0.0.0.0:$PORT app:app"
    ```
 
-   Gunicorn listens on the port provided by Render via the `$PORT` environment
-   variable.
+   Gunicorn listens on the port provided by Render via the `$PORT` environment variable.
 
 ## Pages
 
