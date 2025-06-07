@@ -5,6 +5,8 @@ their portion of a bill. It includes basic routes for signing in, viewing a dash
 and displaying a profile page. The application now uses SQLAlchemy for persistence
 and includes instructions for running database migrations.
 
+The interface is styled using the open source [Bootstrap](https://getbootstrap.com/) library, pulled in via CDN.
+
 ## Setup
 
 1. Install Python 3 and pip.

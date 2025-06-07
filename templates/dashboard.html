@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Dashboard</h1>
 <p>Welcome, {{ current_user.username }}!</p>
-<p>Your portion of the bill is: <strong id="bill-amount">${{ '%.2f'|format(bill) }}</strong></p>
+<p>Your portion of the bill is: <span class="fw-bold" id="bill-amount">${{ '%.2f'|format(bill) }}</span></p>
 <script>
 const evt = new EventSource("{{ url_for('sse_events') }}");
 evt.onmessage = function(e) {
