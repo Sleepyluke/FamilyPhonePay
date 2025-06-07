@@ -3,14 +3,21 @@
 {% block content %}
 <h1>Dashboard</h1>
 <p>Welcome, {{ current_user.username }}!</p>
-<p>Your portion of the bill is: <span class="fw-bold" id="bill-amount">${{ '%.2f'|format(bill) }}</span></p>
+<p id="bill-display">
+{% if bill is none %}
+    No bill available
+{% else %}
+    Your portion of the bill is: <span class="fw-bold" id="bill-amount">${{ '%.2f'|format(bill) }}</span>
+{% endif %}
+</p>
 <script>
 const evt = new EventSource("{{ url_for('sse_events') }}");
 evt.onmessage = function(e) {
     try {
         const data = JSON.parse(e.data);
-        if (data.amount !== undefined) {
-            document.getElementById('bill-amount').textContent = '$' + Number(data.amount).toFixed(2);
+        const el = document.getElementById('bill-amount');
+        if (el && data.amount !== undefined) {
+            el.textContent = '$' + Number(data.amount).toFixed(2);
         }
     } catch(err) {}
 };
