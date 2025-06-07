@@ -21,6 +21,7 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from models import db, User, Invitation, Family, Bill, BillItem, NotificationLog
+from sqlalchemy import func
 from api import api_bp
 from events import add_listener, remove_listener, send_event
 from mailer import send_email
@@ -46,12 +47,6 @@ app.register_blueprint(api_bp)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Placeholder data for bill portions
-USER_BILLS = {
-    'alice': 20.50,
-    'bob': 35.00,
-    'charlie': 15.75
-}
 
 @app.route('/')
 def index():
@@ -125,8 +120,20 @@ def signin():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    bill = USER_BILLS.get(current_user.username.lower(), 0.0)
-    return render_template('dashboard.html', bill=bill)
+    bill_amount = None
+    if current_user.family_id:
+        bill = (
+            Bill.query.filter_by(family_id=current_user.family_id)
+            .filter(Bill.published_at.isnot(None))
+            .order_by(Bill.published_at.desc())
+            .first()
+        )
+        if bill:
+            bill_amount = db.session.query(
+                func.coalesce(func.sum(BillItem.amount), 0)
+            ).filter_by(bill_id=bill.id, user_id=current_user.id).scalar()
+            bill_amount = float(bill_amount or 0)
+    return render_template('dashboard.html', bill=bill_amount)
 
 
 @app.route('/events')
