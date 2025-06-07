@@ -9,7 +9,7 @@ os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 
 import app
 from app import app as flask_app
-from models import db, User, Family, Bill, BillItem, NotificationLog, Invitation
+from models import db, User, Family, Bill, BillItem, NotificationLog, Invitation, Payment
 
 
 @pytest.fixture
@@ -30,8 +30,8 @@ def client():
         db.drop_all()
 
 
-def login(client):
-    return client.post('/signin', data={'username': 'manager', 'password': 'pass'}, follow_redirects=True)
+def login(client, username='manager', password='pass'):
+    return client.post('/signin', data={'username': username, 'password': password}, follow_redirects=True)
 
 
 def test_get_bill_detail(client):
@@ -74,6 +74,7 @@ def test_publish_bill_sends_emails(client, monkeypatch):
         db.session.add(member)
         db.session.commit()
         fam_id = family.id
+        member_id = member.id
 
     login(client)
     rv = client.post('/api/bills', json={'family_id': fam_id})
@@ -82,7 +83,7 @@ def test_publish_bill_sends_emails(client, monkeypatch):
     assert sent[0][0] == 'alice@example.com'
 
     with flask_app.app_context():
-        log = NotificationLog.query.filter_by(user_id=member.id).first()
+        log = NotificationLog.query.filter_by(user_id=member_id).first()
         assert log is not None
 
 
@@ -136,3 +137,33 @@ def test_events_stream(client):
     assert rv.status_code == 200
     assert rv.mimetype == 'text/event-stream'
     assert rv.is_streamed
+
+
+def test_record_payment_marks_item_paid(client):
+    with flask_app.app_context():
+        manager = User.query.filter_by(username='manager').first()
+        family = Family.query.first()
+        member = User(
+            username='payuser',
+            password_hash=generate_password_hash('pw'),
+            family_id=family.id,
+        )
+        db.session.add(member)
+        db.session.commit()
+        bill = Bill(family_id=family.id, created_by=manager.id, total_amount=10)
+        db.session.add(bill)
+        db.session.commit()
+        item = BillItem(bill_id=bill.id, user_id=member.id, description='cell', amount=5)
+        db.session.add(item)
+        db.session.commit()
+        item_id = item.id
+
+    login(client, 'payuser', 'pw')
+    rv = client.post(f'/api/items/{item_id}/payments', json={'amount': 5})
+    assert rv.status_code == 201
+
+    with flask_app.app_context():
+        item = BillItem.query.get(item_id)
+        assert item.paid_at is not None
+        payment = Payment.query.filter_by(bill_item_id=item_id).first()
+        assert payment.amount == 5
