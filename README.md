@@ -40,6 +40,22 @@ make dev
 
 The application will start on `http://localhost:5000/`.
 
+## Deploying to Render
+
+1. Ensure the following environment variables are set in your Render service:
+   `SECRET_KEY`, `DATABASE_URL`, `SENDGRID_API_KEY`, and `EMAIL_FROM`. You can
+   use `.env.example` as a reference.
+2. Add a Postgres database in Render and set `DATABASE_URL` accordingly.
+3. Render will use the `Procfile` to start the app. The included command runs
+   database migrations and then starts Gunicorn:
+
+   ```bash
+   web: bash -c "flask db upgrade && gunicorn -b 0.0.0.0:$PORT app:app"
+   ```
+
+   Gunicorn listens on the port provided by Render via the `$PORT` environment
+   variable.
+
 ## Pages
 
 - `/signin` – Sign in with a username.
