@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Add Item{% endblock %}
+{% block content %}
+<h1>Add Bill Item</h1>
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+<form method="post">
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <input type="text" class="form-control" id="description" name="description" required>
+    </div>
+    {% for member in members %}
+    <div class="mb-3">
+        <label class="form-label">{{ member.username }} amount</label>
+        <input type="number" step="0.01" class="form-control" name="amount_{{ member.id }}" value="0">
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}

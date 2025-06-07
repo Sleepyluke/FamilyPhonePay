@@ -1,4 +1,5 @@
 import os
+import json
 from flask import (
     Flask,
     render_template,
@@ -18,9 +19,11 @@ from flask_login import (
     current_user,
 )
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Invitation
+from datetime import datetime
+from models import db, User, Invitation, Family, Bill, BillItem, NotificationLog
 from api import api_bp
-from events import add_listener, remove_listener
+from events import add_listener, remove_listener, send_event
+from mailer import send_email
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret")
@@ -145,6 +148,68 @@ def sse_events():
 @login_required
 def profile():
     return render_template('profile.html')
+
+
+@app.route('/add-item', methods=['GET', 'POST'])
+@login_required
+def add_item():
+    if not current_user.family_id:
+        abort(400)
+    family = Family.query.get(current_user.family_id)
+    members = family.members
+    error = None
+    if request.method == 'POST':
+        description = request.form.get('description')
+        if not description:
+            error = 'Description required.'
+        else:
+            amounts = {}
+            total = 0
+            for m in members:
+                amt_str = request.form.get(f'amount_{m.id}', '0')
+                try:
+                    amt = float(amt_str)
+                except ValueError:
+                    amt = 0
+                if amt > 0:
+                    amounts[m.id] = amt
+                    total += amt
+            if not amounts:
+                error = 'At least one amount is required.'
+
+        if not error:
+            bill = Bill(
+                family_id=family.id,
+                created_by=current_user.id,
+                total_amount=total,
+                published_at=datetime.utcnow(),
+            )
+            db.session.add(bill)
+            db.session.commit()
+            for uid, amt in amounts.items():
+                item = BillItem(
+                    bill_id=bill.id,
+                    user_id=uid,
+                    description=description,
+                    amount=amt,
+                )
+                db.session.add(item)
+            db.session.commit()
+            subject = 'New bill item added'
+            for uid in amounts:
+                member = User.query.get(uid)
+                if member.email:
+                    try:
+                        send_email(member.email, subject, description)
+                    except Exception:
+                        pass
+                db.session.add(
+                    NotificationLog(user_id=member.id, bill_id=bill.id, message=subject)
+                )
+            db.session.commit()
+            send_event(json.dumps({'amount': float(total)}))
+            return redirect(url_for('dashboard'))
+    return render_template('add_item.html', error=error, members=members)
 
 
 @app.route('/manage')
