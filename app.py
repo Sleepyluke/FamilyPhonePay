@@ -165,7 +165,7 @@ def profile():
 @login_required
 def add_item():
     if not current_user.family_id:
-        abort(400)
+        abort(400, description="You must belong to a family to add items.")
     family = Family.query.get(current_user.family_id)
     members = family.members
     error = None
@@ -235,6 +235,10 @@ def manage():
 def signout():
     logout_user()
     return redirect(url_for('signin'))
+
+@app.errorhandler(400)
+def handle_bad_request(e):
+    return render_template("400.html", message=getattr(e, "description", "Bad Request")), 400
 
 @app.route('/run-migrations')
 def run_migrations():
